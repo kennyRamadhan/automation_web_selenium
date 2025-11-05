@@ -34,6 +34,7 @@ public class BaseTest {
      * - Memaksimalkan jendela browser.
      * - Membuka URL default aplikasi (https://www.saucedemo.com).
      * </p>
+     * @throws InterruptedException 
      */
     @BeforeMethod(alwaysRun = true)
     public void setUp() {

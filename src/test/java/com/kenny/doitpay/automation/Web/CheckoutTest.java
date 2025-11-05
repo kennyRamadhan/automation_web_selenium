@@ -101,10 +101,14 @@ public class CheckoutTest extends BaseTest {
      * @see com.kenny.doitpay.automation.Web.DashboardPage#selectProduct(String)
      * @see #getCsvData() untuk definisi DataProvider yang menyuplai data CSV
      */
+	@Epic("Checkout")
+	@Feature("Select Products")
+	@Severity(SeverityLevel.CRITICAL)
 	@Test(dataProvider = "csvData")
 	public void addProductToCartFromDetailProduct(Map<String, String> data) {
 		
-		login.loginWithHardcodedCredentials("standard_user", true);
+		login.performLoginWithHardcoded("standard_user");
+        softAssert.assertTrue(login.isLoginSuccess(), "Login gagal padahal user valid.");
 		dashboard.selectProduct(data.get("productname"));
 		
 	}
@@ -150,15 +154,18 @@ public class CheckoutTest extends BaseTest {
 	@Severity(SeverityLevel.CRITICAL)
 	@Test(dataProvider = "csvData")
 	public void verifyResetAppState(Map<String, String> data) {
-		
-		login.loginWithHardcodedCredentials("standard_user", true);
+		login.performLoginWithHardcoded("standard_user");
+        softAssert.assertTrue(login.isLoginSuccess(), "Login gagal padahal user valid.");
 		dashboard.selectAllProductsToCart();
-		softAssert.assertTrue(dashboard.getCartItemCount() > 0, "Keranjang seharusnya berisi item sebelum reset");
-		dashboard.hamburgerBtn();
-		dashboard.resetStateApp();
+        int cartCountBefore = dashboard.getCartItemCount();
+		softAssert.assertTrue(cartCountBefore > 0, "Keranjang seharusnya berisi item sebelum reset");
+		dashboard.openHamburgerMenu();
+		dashboard.resetAppState();
 		dashboard.logout();
-	    login.loginWithHardcodedCredentials("standard_user", true);
-	    dashboard.verifyCartIsEmptyAfterReset();
+		login.performLoginWithHardcoded("standard_user");
+        softAssert.assertTrue(login.isLoginSuccess(), "Login gagal padahal user valid.");
+	    int cartCountAfter = dashboard.getCartItemCount();
+	    softAssert.assertEquals(cartCountAfter, 0, "Keranjang seharusnya kosong setelah reset app state.");
 	    softAssert.assertAll();
 	}
 	
@@ -223,8 +230,10 @@ public class CheckoutTest extends BaseTest {
 	@Test(dataProvider = "csvData")
 	public void flowCheckoutProductsE2E(Map<String, String> data) {
 		
-		try {
-	        login.loginWithHardcodedCredentials("standard_user", true);
+
+	    try {
+	    	login.performLoginWithHardcoded("standard_user");
+	        softAssert.assertTrue(login.isLoginSuccess(), "Login gagal padahal user valid.");
 	        dashboard.selectAllProductsToCart();
 
 	        Double expectedSubTotal = checkout.getTotalPriceInCart();
@@ -234,10 +243,10 @@ public class CheckoutTest extends BaseTest {
 	        checkout.inputLastName(data.get("lastname"));
 	        checkout.inputPostalCode(data.get("postalcode"));
 
-	       
-	        if (data.get("type").equalsIgnoreCase("positive")) {
+	        boolean infoValid = checkout.submitInformation();
 
-	            checkout.verifyInformationIsValid(); 
+	        if (data.get("type").equalsIgnoreCase("positive")) {
+	            Assert.assertTrue(infoValid, "Form informasi checkout seharusnya valid tapi muncul error!");
 
 	            checkout.scrollToFinishOrder();
 
@@ -248,27 +257,30 @@ public class CheckoutTest extends BaseTest {
 
 	            LogHelper.step("Verifikasi SubTotal dan Grand Total");
 	            softAssert.assertEquals(actualSubTotal, expectedSubTotal, 0.001,
-	                    "Verifikasi SubTotal gagal: Harga di cart (" + expectedSubTotal +
-	                            ") tidak cocok dengan summary (" + actualSubTotal + ").");
-
+	                    "Subtotal tidak sesuai antara cart dan summary.");
 	            softAssert.assertEquals(actualGrandTotal, expectedGrandTotal, 0.001,
-	                    "Verifikasi Grand Total gagal: (" + expectedGrandTotal +
-	                            ") tidak cocok dengan yang ditampilkan (" + actualGrandTotal + ").");
+	                    "Grand Total tidak sesuai.");
 
 	            checkout.finishOrder();
-	            checkout.verifySuccessOrder();
+	            softAssert.assertTrue(checkout.isSuccessOrderDisplayed(),
+	                    "Pesan 'Thank you for your order!' tidak muncul.");
+	        }
 
-	        } else if (data.get("type").equalsIgnoreCase("negative")) {
-	            checkout.verifyInformationIsInvalid(); 
-	        } else {
-	            Assert.fail("Nilai kolom 'type' tidak valid. Gunakan 'positive' atau 'negative'.");
+	        else if (data.get("type").equalsIgnoreCase("negative")) {
+	        	   softAssert.assertFalse(infoValid,
+	                    "Form checkout seharusnya invalid tetapi tidak muncul pesan error!");
+	        }
+
+	        else {
+	        	   softAssert.fail("Nilai kolom 'type' tidak valid. Gunakan 'positive' atau 'negative'.");
 	        }
 
 	    } catch (Exception e) {
-	        Assert.fail("Test case gagal karena exception: " + e.getMessage());
+	        softAssert.fail("Test case gagal karena exception: " + e.getMessage());
 	    } finally {
 	        softAssert.assertAll();
 	    }
+	    
 	}
 	
 

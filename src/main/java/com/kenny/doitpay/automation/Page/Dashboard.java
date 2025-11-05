@@ -12,261 +12,207 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.asserts.SoftAssert;
 
 import com.kenny.doitpay.automation.Config.WebDriverManager;
 import com.kenny.doitpay.automation.Helper.CustomCommand;
 import com.kenny.doitpay.automation.Listeners.LogHelper;
 
-
-
 /**
  * Dashboard adalah Page Object yang merepresentasikan halaman utama aplikasi e-commerce.
  * <p>
- * class ini menyediakan metode untuk berinteraksi dengan elemen UI pada halaman dashboard,
+ * Class ini menyediakan metode untuk berinteraksi dengan elemen UI pada halaman dashboard,
  * termasuk memilih produk, menambahkan ke keranjang, membuka menu navigasi, reset aplikasi,
- * dan logout. Juga mendukung verifikasi jumlah item di keranjang.
+ * dan logout. 
  * </p>
- * @author Kenny Ramadhan
- * @version 1.0
+ * <p>
+ * Semua verifikasi (assertion) telah dipindahkan ke layer test agar
+ * Page Object hanya fokus pada interaksi dan pengambilan data.
+ * </p>
+ * 
+ * @author Kenny
+ * @version 2.0 (clean POM)
  */
 public class Dashboard {
 
-	 private final CustomCommand utils;
-	   private final SoftAssert softAssert;
-	   
-	   
-	   
-	   
-	   /**
-	     * Konstruktor Dashboard.
-	     * <p>
-	     * Menginisialisasi elemen halaman menggunakan {@link PageFactory} dan membuat instance 
-	     * {@link CustomCommand} serta {@link SoftAssert}.
-	     * </p>
-	     */
-	   public Dashboard() {
-	    	this.utils = new CustomCommand();
-	
-	        this.softAssert = new SoftAssert();
-	        
-	        PageFactory.initElements(WebDriverManager.getDriver(), this);
-	        
-	   }
-	   
-	   @FindBy(xpath ="//select[@class='product_sort_container']")
-	   private WebElement filterDropdown;
-	   
-	   @FindBy(xpath ="//div[@data-test=\"inventory-item-name\"]")
-	   private List<WebElement> productNames;
-	   
-	   @FindBy(xpath ="//button[@class='btn btn_primary btn_small btn_inventory ']")
-	   private List<WebElement> productListAddToCartBtn;
-	   
-	   @FindBy(xpath ="//a[@class='shopping_cart_link']")
-	   private WebElement cartIcon;
-	   
-	   private By cartBadge = By.xpath("//span[@class='shopping_cart_badge']");
-	   
-	   @FindBy(id="add-to-cart")
-	   private WebElement addToCartInDetailProduct;
-	   
-	   @FindBy(id="react-burger-menu-btn")
-	   private WebElement burgerBtn;
-	   
-	   
-	   @FindBy(id="reset_sidebar_link")
-	   private WebElement resetAppStateBtn;
-	   
-	   
-	   @FindBy(id="logout_sidebar_link")
-	   private WebElement logoutBtn;
-	   
-	  
+    private final CustomCommand utils;
 
-	   /**
-	     * Mengklik tombol hamburger untuk membuka menu navigasi.
-	     */
-	    public void hamburgerBtn() {
-	        LogHelper.step("Membuka Navigasi");
-	        utils.clickWhenReady(burgerBtn);
-	        LogHelper.detail("Berhasil menampilkan navigasi");
-	    }
+    /**
+     * Konstruktor Dashboard.
+     * <p>
+     * Menginisialisasi elemen halaman menggunakan {@link PageFactory} dan membuat instance
+     * {@link CustomCommand}.
+     * </p>
+     */
+    public Dashboard() {
+        this.utils = new CustomCommand();
+        PageFactory.initElements(WebDriverManager.getDriver(), this);
+    }
 
-	    /**
-	     * Melakukan reset state aplikasi melalui menu navigasi.
-	     */
-	    public void resetStateApp() {
-	        LogHelper.step("Melakukan Reset App");
-	        utils.clickWhenReady(resetAppStateBtn);
-	        LogHelper.detail("Berhasil Melakukan Reset App");
-	    }
+    @FindBy(xpath = "//select[@class='product_sort_container']")
+    private WebElement filterDropdown;
 
-	    /**
-	     * Logout user dari aplikasi.
-	     */
-	    public void logout() {
-	        LogHelper.step("Log out User");
-	        utils.clickWhenReady(logoutBtn);
-	        LogHelper.detail("Berhasil Log out dan menampilkan halaman Login");
-	    }
+    @FindBy(xpath = "//div[@data-test=\"inventory-item-name\"]")
+    private List<WebElement> productNames;
 
-	   
-	   /**
-	    * Memilih dan menambahkan produk ke keranjang berdasarkan nama produk secara dinamis.
-	    * <p>
-	    * Digunakan untuk skenario data-driven test di mana nama produk berasal dari input eksternal 
-	    * seperti Excel, CSV, atau parameter test. Metode ini akan melakukan pencarian produk 
-	    * pada daftar elemen yang tampil di halaman, kemudian membuka detail produk 
-	    * dan menekan tombol "Add to cart".
-	    * </p>
-	    *
-	    * @param name nama produk yang ingin dipilih dan ditambahkan ke keranjang
-	    */
+    @FindBy(xpath = "//button[@class='btn btn_primary btn_small btn_inventory ']")
+    private List<WebElement> productListAddToCartBtn;
 
-	   public void selectProduct(String name) {
-		    LogHelper.step("Memilih produk dengan nama: " + name);
-		    boolean found = false;
+    @FindBy(xpath = "//a[@class='shopping_cart_link']")
+    private WebElement cartIcon;
 
-		    try {
-		        
-		        List<WebElement> products = utils.refreshElement(() -> productNames);
+    private By cartBadge = By.xpath("//span[@class='shopping_cart_badge']");
 
-		        for (WebElement product : products) {
-		            String productText = product.getText().trim();
-		            if (productText.equalsIgnoreCase(name)) {
-		                utils.clickWhenReady(product);
-		                utils.clickWhenReady(addToCartInDetailProduct);
-		                LogHelper.detail("Produk '" + name + "' berhasil ditambahkan ke keranjang.");
-		                found = true;
-		                break; 
-		            }
-		        }
+    @FindBy(id = "add-to-cart")
+    private WebElement addToCartInDetailProduct;
 
-		        if (!found) {
-		            LogHelper.detail("Produk '" + name + "' tidak ditemukan di halaman.");
-		            softAssert.fail("Produk '" + name + "' tidak ditemukan di halaman.");
-		        }
+    @FindBy(id = "react-burger-menu-btn")
+    private WebElement burgerBtn;
 
-		    } catch (StaleElementReferenceException e) {
-		        LogHelper.detail("Terjadi stale element, mencoba ulang untuk produk: " + name);
-		        selectProduct(name); // recursive retry 1x
-		    }
+    @FindBy(id = "reset_sidebar_link")
+    private WebElement resetAppStateBtn;
 
-		    softAssert.assertAll();
-		}
+    @FindBy(id = "logout_sidebar_link")
+    private WebElement logoutBtn;
 
-	   
-	   /**
-	    * Memastikan keranjang kosong setelah reset app state.
-	    */
-	   public void verifyCartIsEmptyAfterReset() {
-	       int count = getCartItemCount();
-	       LogHelper.step("Memeriksa keranjang setelah reset. Jumlah item: " + count);
-	       softAssert.assertEquals(count, 0, "Keranjang tidak kosong setelah reset.");
-	       softAssert.assertAll();
-	   }
+    /**
+     * Mengklik tombol hamburger untuk membuka menu navigasi.
+     */
+    public void openHamburgerMenu() {
+        LogHelper.step("Membuka Navigasi");
+        utils.clickWhenReady(burgerBtn);
+        LogHelper.detail("Berhasil menampilkan navigasi");
+    }
 
-	   
-	   /**
-	     * Menambahkan seluruh produk yang terlihat di halaman ke dalam keranjang belanja secara otomatis.
-	     * <p>
-	     * Metode ini akan melakukan iterasi terhadap semua tombol <b>"Add to cart"</b> 
-	     * yang masih aktif di halaman, kemudian mengkliknya satu per satu hingga semua produk 
-	     * berhasil ditambahkan. Setelah semua produk berhasil dimasukkan ke keranjang, 
-	     * metode ini akan membuka halaman <b>Cart</b> untuk verifikasi.
-	     * </p>
-	     *
-	     * <p><b>Catatan Teknis:</b></p>
-	     * <ul>
-	     *   <li>Setiap klik tombol diverifikasi dengan menunggu atribut tombol berubah menjadi
-	     *       <code>REMOVE</code> sebagai indikasi sukses.</li>
-	     *   <li>Jika tidak ada lagi tombol "Add to cart", proses berhenti otomatis.</li>
-	     *   <li>Jika terjadi <code>StaleElementReferenceException</code> atau <code>TimeoutException</code>,
-	     *       elemen akan dilewati dan proses dilanjutkan ke produk berikutnya.</li>
-	     * </ul>
-	     *
-	     * <p><b>Langkah akhir:</b></p>
-	     * Setelah semua produk ditambahkan, metode akan melakukan klik pada ikon cart 
-	     * untuk membuka halaman keranjang.
-	     *
-	     * @throws IllegalStateException jika WebDriver belum diinisialisasi dengan benar
-	     */
-	   @SuppressWarnings("static-access")
-	public void selectAllProductsToCart() {
-	       LogHelper.step("Menambahkan semua produk yang tersedia ke keranjang");
+    /**
+     * Melakukan reset state aplikasi melalui menu navigasi.
+     */
+    public void resetAppState() {
+        LogHelper.step("Melakukan Reset App");
+        utils.clickWhenReady(resetAppStateBtn);
+        LogHelper.detail("Berhasil melakukan Reset App");
+    }
 
-	       WebDriver driver = WebDriverManager.getDriver();
-	       WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-	       int totalAdded = 0;
+    /**
+     * Logout user dari aplikasi.
+     */
+    public void logout() {
+        LogHelper.step("Melakukan Log out User");
+        utils.clickWhenReady(logoutBtn);
+        LogHelper.detail("Berhasil Log out dan menampilkan halaman Login");
+    }
 
-	       // Loop utama: selama masih ada tombol "Add to Cart" di halaman
-	       while (true) {
-	           // Ambil ulang tombol Add to Cart yang masih aktif
-	           List<WebElement> addButtons = driver.findElements(By.xpath("//button[contains(normalize-space(.), 'Add to cart')]"));
-	           if (addButtons.isEmpty()) {
-	        	   utils.scrollToTop();
-	               LogHelper.detail("Semua produk berhasil ditambahkan ke keranjang.");
-	               break;
-	           }
+    /**
+     * Memilih dan menambahkan produk ke keranjang berdasarkan nama produk secara dinamis.
+     * <p>
+     * Metode ini mengembalikan nilai boolean untuk mengindikasikan apakah produk berhasil ditemukan dan ditambahkan.
+     * </p>
+     *
+     * @param name nama produk yang ingin dipilih dan ditambahkan ke keranjang
+     * @return true jika produk berhasil ditambahkan, false jika tidak ditemukan
+     */
+    public boolean selectProduct(String name) {
+        LogHelper.step("Memilih produk dengan nama: " + name);
+        boolean found = false;
 
-	           // Klik satu per satu tombol yang masih ada
-	           for (WebElement addButton : addButtons) {
-	               try {
-	                   utils.clickWhenReady(addButton);
-	                   totalAdded++;
+        try {
+            List<WebElement> products = utils.refreshElement(() -> productNames);
 
-	                   // Tunggu tombol berubah jadi REMOVE (indikasi sukses klik)
-	                   wait.until(ExpectedConditions.attributeContains(addButton, "class", "btn_secondary"));
-	                   LogHelper.detail("Produk ke-" + totalAdded + " berhasil ditambahkan ke keranjang.");
+            for (WebElement product : products) {
+                String productText = product.getText().trim();
+                if (productText.equalsIgnoreCase(name)) {
+                    utils.clickWhenReady(product);
+                    utils.clickWhenReady(addToCartInDetailProduct);
+                    LogHelper.detail("Produk '" + name + "' berhasil ditambahkan ke keranjang.");
+                    found = true;
+                    break;
+                }
+            }
 
-	               } catch (StaleElementReferenceException ignored) {
-	                   // Tombol sudah hilang dari DOM — lanjut saja
-	               } catch (TimeoutException te) {
-	                   LogHelper.detail("imeout: tombol tidak berubah menjadi 'Remove' setelah diklik.");
-	               } catch (Exception e) {
-	                   LogHelper.detail("Gagal menambahkan produk: " + e.getMessage());
-	               }
-	           }
+            if (!found) {
+                LogHelper.detail("Produk '" + name + "' tidak ditemukan di halaman Dashboard.");
+            }
 
-	           WebElement lastProduct = addButtons.get(addButtons.size() - 1);
-	           utils.scrollIntoView(lastProduct);
-	           utils.sleep(500);
-	       }
+        } catch (StaleElementReferenceException e) {
+            LogHelper.detail("Terjadi stale element, mencoba ulang untuk produk: " + name);
+            selectProduct(name); // recursive retry sekali
+        }
 
-	       LogHelper.step("Membuka halaman Cart");
-	       try {
-	           utils.clickWhenReady(cartIcon);
-	           LogHelper.detail("Berhasil membuka halaman Cart.");
-	       } catch (Exception e) {
-	           softAssert.fail("Gagal membuka halaman Cart: " + e.getMessage());
-	       }
+        return found;
+    }
 
-	       softAssert.assertAll();
-	   }
-	   
-	   
-	   /**
-	    * Mengecek apakah keranjang memiliki produk.
-	    * @return jumlah item di keranjang, atau 0 jika kosong.
-	    */
-	   public int getCartItemCount() {
-		   WebDriver driver = WebDriverManager.getDriver();
-	       try {
-	           List<WebElement> badges = driver.findElements(cartBadge);
-	           if (!badges.isEmpty()) {
-	               String countText = badges.get(0).getText().trim();
-	               return Integer.parseInt(countText);
-	           }
-	       } catch (Exception e) {
-	           LogHelper.detail("Tidak dapat membaca jumlah keranjang: " + e.getMessage());
-	       }
-	       return 0;
-	   }
+    /**
+     * Menambahkan seluruh produk yang terlihat di halaman ke dalam keranjang belanja secara otomatis.
+     * <p>
+     * Metode ini akan mengklik semua tombol "Add to cart" yang masih aktif hingga semua produk
+     * berhasil ditambahkan.
+     * </p>
+     *
+     * @return total jumlah produk yang berhasil ditambahkan ke keranjang
+     */
+    @SuppressWarnings("static-access")
+    public int selectAllProductsToCart() {
+        LogHelper.step("Menambahkan semua produk yang tersedia ke keranjang");
 
-	   
+        WebDriver driver = WebDriverManager.getDriver();
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        int totalAdded = 0;
 
+        while (true) {
+            List<WebElement> addButtons = driver.findElements(
+                    By.xpath("//button[contains(normalize-space(.), 'Add to cart')]"));
+            if (addButtons.isEmpty()) {
+                utils.scrollToTop();
+                LogHelper.detail("Semua produk berhasil ditambahkan ke keranjang.");
+                break;
+            }
 
+            for (WebElement addButton : addButtons) {
+                try {
+                    utils.clickWhenReady(addButton);
+                    totalAdded++;
+                    wait.until(ExpectedConditions.attributeContains(addButton, "class", "btn_secondary"));
+                    LogHelper.detail("Produk ke-" + totalAdded + " berhasil ditambahkan ke keranjang.");
+                } catch (StaleElementReferenceException ignored) {
+                    // skip elemen yang hilang dari DOM
+                } catch (TimeoutException te) {
+                    LogHelper.detail("Timeout: tombol tidak berubah menjadi 'Remove' setelah diklik.");
+                } catch (Exception e) {
+                    LogHelper.detail("Gagal menambahkan produk: " + e.getMessage());
+                }
+            }
 
+            WebElement lastProduct = addButtons.get(addButtons.size() - 1);
+            utils.scrollIntoView(lastProduct);
+            utils.sleep(500);
+        }
 
+        LogHelper.step("Membuka halaman Cart");
+        try {
+            utils.clickWhenReady(cartIcon);
+            LogHelper.detail("Berhasil membuka halaman Cart.");
+        } catch (Exception e) {
+            LogHelper.detail("Gagal membuka halaman Cart: " + e.getMessage());
+        }
+
+        return totalAdded;
+    }
+
+    /**
+     * Mengecek apakah keranjang memiliki produk.
+     * 
+     * @return jumlah item di keranjang, atau 0 jika kosong.
+     */
+    public int getCartItemCount() {
+        WebDriver driver = WebDriverManager.getDriver();
+        try {
+            List<WebElement> badges = driver.findElements(cartBadge);
+            if (!badges.isEmpty()) {
+                String countText = badges.get(0).getText().trim();
+                return Integer.parseInt(countText);
+            }
+        } catch (Exception e) {
+            LogHelper.detail("Tidak dapat membaca jumlah keranjang: " + e.getMessage());
+        }
+        return 0;
+    }
 }

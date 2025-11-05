@@ -7,11 +7,12 @@ import org.openqa.selenium.WebDriver;
 public class WebDriverManager {
 	
 	private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
-	   
+
 	   // Inisialisasi driver baru
-	    public static void initDriver(DriverFactory factory) {
+	    public static void initDriver(DriverFactory factory)  {
 	    	if (driver.get() == null) {
-	            driver.set(factory.createDriver());
+	    		 driver.set(factory.createDriver());
+	    		
 	        }
 	    }
 	    

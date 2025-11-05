@@ -182,6 +182,7 @@ public class TestListeners implements ITestListener{
 	    public void onFinish(ITestContext context) {
 	    	 System.out.println("Flushing Extent Report...");
 	        extent.flush(); // Flush sekali di akhir suite
+	        ExtentNode.remove();
 	        System.out.println("Extent Report generated at: " +
 	                System.getProperty("user.dir") + "/reports/");
 	    }

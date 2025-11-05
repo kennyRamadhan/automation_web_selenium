@@ -1,3 +1,4 @@
+
 # ============================================
 # Java / Eclipse Build Artifacts
 # ============================================
@@ -22,12 +23,13 @@ release.properties
 *.log
 
 # ============================================
-# Test Reports (TestNG, Surefire)
+# Test Reports (TestNG, Surefire, Extent)
 # ============================================
 test-output/
 surefire-reports/
-
-
+reports/
+allure-results
+allure-results-other
 # ============================================
 # Appium & Node Related
 # ============================================
@@ -44,7 +46,6 @@ appium.log
 .classpath
 .project
 .settings/
-.factorypath
 
 # --- IntelliJ IDEA ---
 .idea/
@@ -66,3 +67,4 @@ Thumbs.db
 # Local Config
 # ============================================
 config.properties
+web-driver

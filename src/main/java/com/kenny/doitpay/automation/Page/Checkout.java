@@ -1,359 +1,269 @@
 package com.kenny.doitpay.automation.Page;
 
 import java.util.List;
-
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.testng.asserts.SoftAssert;
 
 import com.kenny.doitpay.automation.Config.WebDriverManager;
 import com.kenny.doitpay.automation.Helper.CustomCommand;
 import com.kenny.doitpay.automation.Listeners.LogHelper;
 
 /**
- * <b>Checkout Page Object</b>
+ * <h1>Checkout Page Object</h1>
  * <p>
- * class ini merepresentasikan halaman Checkout pada aplikasi e-commerce. Berisi
- * elemen-elemen UI dan method yang digunakan untuk melakukan interaksi seperti
- * input data pengguna, validasi field wajib, dan menyelesaikan proses checkout.
- * <p>
- * Class ini menggunakan pendekatan Page Object Model (POM) untuk menjaga
- * keterpisahan antara logika pengujian dan interaksi antarmuka.
+ * Kelas ini merepresentasikan halaman <b>Checkout</b> pada aplikasi Swag Labs.
+ * Semua aksi dan elemen di halaman checkout ditangani melalui metode di kelas ini.
+ * <br><br>
+ * Sesuai prinsip <b>Page Object Model (POM)</b>, kelas ini:
+ * <ul>
+ *   <li>Tidak berisi assertion atau logika verifikasi (hanya tindakan dan pengambilan data).</li>
+ *   <li>Seluruh validasi dilakukan di layer test (misalnya di CheckoutTest).</li>
+ *   <li>Menangani interaksi UI, termasuk input form, klik tombol, dan ekstraksi teks.</li>
+ * </ul>
  * </p>
  * 
- * @author Kenny Ramadhan
- * @version 1.0
+ * @author Kenny
+ * @since 2025-11
  */
 public class Checkout {
 
-	private final CustomCommand utils;
-	private final SoftAssert softAssert;
+    /** Utility class untuk aksi custom seperti click, scroll, dan validasi elemen. */
+    private final CustomCommand utils;
 
-	/**
-	 * Konstruktor default untuk inisialisasi Page Object Checkout.
-	 * <p>
-	 * Menginisialisasi WebDriver dari {@link WebDriverManager}, kemudian melakukan
-	 * binding elemen halaman menggunakan {@link PageFactory}.
-	 * </p>
-	 */
-	public Checkout() {
-		this.utils = new CustomCommand();
-		this.softAssert = new SoftAssert();
-		PageFactory.initElements(WebDriverManager.getDriver(), this);
-	}
+    /** Konstruktor untuk inisialisasi PageFactory dan CustomCommand. */
+    public Checkout() {
+        this.utils = new CustomCommand();
+        PageFactory.initElements(WebDriverManager.getDriver(), this);
+    }
 
-	// ============================== LOCATORS ==============================
+    // ============================== LOCATORS ==============================
 
-	@FindBy(id = "checkout")
-	private WebElement checkoutBtn;
+    @FindBy(id = "checkout")
+    private WebElement checkoutBtn;
 
-	@FindBy(id = "first-name")
-	private WebElement firstNameField;
+    @FindBy(id = "first-name")
+    private WebElement firstNameField;
 
-	@FindBy(id = "last-name")
-	private WebElement lastNameField;
+    @FindBy(id = "last-name")
+    private WebElement lastNameField;
 
-	@FindBy(id = "postal-code")
-	private WebElement postalCodeField;
+    @FindBy(id = "postal-code")
+    private WebElement postalCodeField;
 
-	@FindBy(xpath = "//h3[normalize-space(text())='Error: Postal Code is required']")
-	private WebElement errorMessagePostalCode;
+    @FindBy(xpath = "//h3[normalize-space(text())='Error: Postal Code is required']")
+    private WebElement errorMessagePostalCode;
 
-	@FindBy(xpath = "//h3[normalize-space(text())='Error: First Name is required']")
-	private WebElement errorMessageFirstName;
+    @FindBy(xpath = "//h3[normalize-space(text())='Error: First Name is required']")
+    private WebElement errorMessageFirstName;
 
-	@FindBy(xpath = "//h3[normalize-space(text())='Error: Last Name is required']")
-	private WebElement errorMessageLastName;
+    @FindBy(xpath = "//h3[normalize-space(text())='Error: Last Name is required']")
+    private WebElement errorMessageLastName;
 
-	@FindBy(id = "continue")
-	private WebElement continueBtn;
+    @FindBy(id = "continue")
+    private WebElement continueBtn;
 
-	@FindBy(id = "cancel")
-	private WebElement cancelBtn;
+    @FindBy(id = "finish")
+    private WebElement finishBtn;
 
-	@FindBy(id = "finish")
-	private WebElement finishBtn;
+    @FindBy(xpath = "//h2[normalize-space()='Thank you for your order!']")
+    private WebElement completeOrderSuccessMessage;
 
-	@FindBy(xpath = "//h2[normalize-space()='Thank you for your order!']")
-	private WebElement completeOrderSuccessMessage;
+    @FindBy(xpath = "//div[@data-test=\"inventory-item-price\"]")
+    private List<WebElement> priceListOnCart;
 
-	@FindBy(xpath = "//div[@data-test=\"inventory-item-price\"]")
-	private List<WebElement> priceListOnCart;
+    @FindBy(xpath = "//div[@class='summary_subtotal_label']")
+    private WebElement subTotalLabel;
 
-	@FindBy(xpath = "//div[@class='summary_subtotal_label']")
-	private WebElement subTotalLabel;
+    @FindBy(xpath = "//div[@class='summary_tax_label']")
+    private WebElement taxLabel;
 
-	@FindBy(xpath = "//div[@class='summary_tax_label']")
-	private WebElement taxLabel;
+    @FindBy(xpath = "//div[@class='summary_total_label']")
+    private WebElement grandTotal;
 
-	@FindBy(xpath = "//div[@class='summary_total_label']")
-	private WebElement grandTotal;
+    // ============================== ACTION METHODS ==============================
 
-	// ============================== ACTION METHODS ==============================
+    /**
+     * Menghitung total harga seluruh produk di keranjang (belum termasuk pajak).
+     * 
+     * @return total harga dalam format Double
+     */
+    public Double getTotalPriceInCart() {
+        double totalAmount = 0.0;
+        int itemIndex = 1;
 
-	/**
-	 * Menghitung total harga semua item di keranjang, termasuk item yang
-	 * tersembunyi dan perlu di-scroll. * Metode ini menggunakan JavaScript
-	 * 'textContent' untuk mengambil harga sehingga lebih cepat dan tidak memerlukan
-	 * scroll visual.
-	 *
-	 * @return Total harga (Double)
-	 */
-	public Double getTotalPriceInCart() {
-		double totalAmount = 0.0;
-		int itemIndex = 1; // Untuk debug
+        LogHelper.step("Menghitung total harga dari " + priceListOnCart.size() + " item di keranjang.");
 
-		LogHelper.step("Menghitung total harga dari " + priceListOnCart.size() + " item di keranjang.");
+        for (WebElement priceElement : priceListOnCart) {
+            Double price = extractPriceFromLabel(priceElement, "Item Keranjang ke-" + itemIndex);
+            if (price != null) totalAmount += price;
+            itemIndex++;
+        }
 
-		for (WebElement priceElement : priceListOnCart) {
+        LogHelper.detail("Total harga di keranjang tanpa pajak: " + totalAmount);
+        return totalAmount;
+    }
 
-			// untuk debug jika terjadi error
-			String labelUntukLog = "Item Keranjang ke-" + itemIndex;
+    /**
+     * Menavigasi dari halaman produk ke halaman Checkout.
+     */
+    public void checkoutProducts() {
+        LogHelper.step("Menavigasi ke halaman Checkout");
+        utils.scrollIntoText("Checkout");
+        utils.clickWhenReady(checkoutBtn);
+        LogHelper.detail("Berhasil menampilkan halaman Checkout");
+    }
 
-			Double price = extractPriceFromLabel(priceElement, labelUntukLog);
+    /**
+     * Mengisi kolom <b>First Name</b> pada form Checkout.
+     * 
+     * @param firstName nama depan pengguna
+     */
+    public void inputFirstName(String firstName) {
+        LogHelper.step("Input First Name");
+        utils.sendKeysWhenReady(firstNameField, firstName);
+        LogHelper.detail("Berhasil Input First Name Dengan :" +firstName);
+    }
 
-			// Cek jika helper mengembalikan null (gagal parsing/ekstraksi)
-			if (price != null) {
-				totalAmount += price; // Auto-unboxing Double ke double
-			}
-			// Jika price == null, error sudah di-log di dalam extractPriceFromLabel
+    /**
+     * Mengisi kolom <b>Last Name</b> pada form Checkout.
+     * 
+     * @param lastName nama belakang pengguna
+     */
+    public void inputLastName(String lastName) {
+        LogHelper.step("Input Last Name");
+        utils.sendKeysWhenReady(lastNameField, lastName);
+        LogHelper.detail("Berhasil Input Last Name Dengan :" +lastName);
+    }
 
-			itemIndex++;
-		}
+    /**
+     * Mengisi kolom <b>Postal Code</b> pada form Checkout.
+     * 
+     * @param postalCode kode pos pengguna
+     */
+    public void inputPostalCode(String postalCode) {
+        LogHelper.step("Input Postal Code");
+        utils.sendKeysWhenReady(postalCodeField, postalCode);
+        LogHelper.detail("Berhasil Input Postal Code Dengan :" +postalCode);
+    }
 
-		LogHelper.detail("Total Harga yang ada di keranjang tanpa pajak adalah :" + totalAmount);
-		return totalAmount;
-	}
+    /**
+     * Melanjutkan proses checkout dengan menekan tombol <b>Continue</b>.
+     * <br><br>
+     * Metode ini akan mendeteksi apakah form valid atau muncul pesan error.
+     * 
+     * @return {@code true} jika form valid (tidak muncul error), {@code false} jika ada error input
+     */
+    public boolean submitInformation() {
+        LogHelper.step("Klik tombol Continue");
+        utils.clickWhenReady(continueBtn);
 
-	
-	/**
-	 * Melakukan klik pada tombol "Checkout" untuk melanjutkan proses checkout.
-	 */
-	public void checkoutProducts() {
-		LogHelper.step("Menavigasi ke halaman Checkout");
-		utils.scrollIntoText("Checkout");
-		utils.clickWhenReady(checkoutBtn);
-	}
+        boolean hasError = false;
 
-	/**
-	 * Mengisi field "First Name" pada form checkout.
-	 *
-	 * @param firstName nama depan pengguna
-	 */
-	public void inputFirstName(String firstName) {
-		LogHelper.step("Input First Name");
-		utils.sendKeysWhenReady(firstNameField, firstName);
-		LogHelper.detail("Berhasil mengisi First Name: " + firstName);
-	}
+        if (utils.isElementPresent(errorMessageFirstName)) {
+            LogHelper.detail("Error: First Name is required");
+            hasError = true;
+        }
+        if (utils.isElementPresent(errorMessageLastName)) {
+            LogHelper.detail("Error: Last Name is required");
+            hasError = true;
+        }
+        if (utils.isElementPresent(errorMessagePostalCode)) {
+            LogHelper.detail("Error: Postal Code is required");
+            hasError = true;
+        }
 
-	/**
-	 * Mengisi field "Last Name" pada form checkout.
-	 *
-	 * @param lastName nama belakang pengguna
-	 */
-	public void inputLastName(String lastName) {
-		LogHelper.step("Input Last Name");
-		utils.sendKeysWhenReady(lastNameField, lastName);
-		LogHelper.detail("Berhasil mengisi Last Name: " + lastName);
-	}
+        return !hasError;
+    }
 
-	/**
-	 * Mengisi field "Postal Code" pada form checkout.
-	 *
-	 * @param postalCode kode pos pengguna
-	 */
-	public void inputPostalCode(String postalCode) {
-		LogHelper.step("Input Postal Code");
-		utils.sendKeysWhenReady(postalCodeField, postalCode);
-		LogHelper.detail("Berhasil mengisi Postal Code: " + postalCode);
-	}
+    /**
+     * Melakukan scroll hingga elemen tombol <b>Finish</b> terlihat di layar.
+     */
+    public void scrollToFinishOrder() {
+        LogHelper.step("Scroll ke tombol Finish");
+        utils.scrollIntoView(finishBtn);
+        LogHelper.detail("Berhasil Menampilkan Button Finish dan Detail Harga");
+    }
 
-	
-	/**
-	 * Mengisi Informasi Checkout
-	 * <p>
-	 * Method ini:
-	 * <ul>
-	 * <li>Input Semua Field yang ada di form Information</li>
-	 * <li>Melakukan validasi jika ada field wajib yang belum diisi</li>
-	 * </ul>
-	 */
-	public void verifyInformationIsValid() {
-		LogHelper.step("Klik tombol Continue");
-		utils.clickWhenReady(continueBtn);
+    /**
+     * Mengambil nilai subtotal (sebelum pajak) dari halaman ringkasan pembayaran.
+     * 
+     * @return nilai subtotal dalam format Double
+     */
+    public Double getSubTotal() {
+    	
+    	LogHelper.step("Ekstrak Sub Total");
+        Double value = extractPriceFromLabel(subTotalLabel, "SubTotal");
+        LogHelper.detail("Berhasil Extract Sub Total");
+        return value;
+    }
 
-		// Validasi error message jika field wajib kosong
-		try {
-			if (errorMessageFirstName.isDisplayed()) {
-				LogHelper.detail("First Name is required!");
-				softAssert.fail("First Name is required");
-			}
-		} catch (NoSuchElementException ignored) {
-		}
+    /**
+     * Mengambil nilai pajak dari halaman ringkasan pembayaran.
+     * 
+     * @return nilai pajak dalam format Double
+     */
+    public Double getTax() {
+    	LogHelper.step("Ekstrak Tax");
+        Double value = extractPriceFromLabel(taxLabel, "Tax");
+        LogHelper.detail("Berhasil Extract Tax");
+        return value;
+    }
 
-		try {
-			if (errorMessageLastName.isDisplayed()) {
-				LogHelper.detail("Last Name is required!");
-				softAssert.fail("Last Name is required");
-			}
-		} catch (NoSuchElementException ignored) {
-		}
+    /**
+     * Mengambil nilai total keseluruhan (subtotal + pajak) dari halaman ringkasan pembayaran.
+     * 
+     * @return nilai total keseluruhan dalam format Double
+     */
+    public Double getGrandTotal() {
+    	LogHelper.step("Ekstrak Grand Total");
+        Double value = extractPriceFromLabel(grandTotal, "Total");
+        LogHelper.detail("Berhasil Extract Grand Total");
+        return value;
+    }
 
-		try {
-			if (errorMessagePostalCode.isDisplayed()) {
-				LogHelper.detail("Postal Code is required!");
-				softAssert.fail("Postal Code is required");
-			}
-		} catch (NoSuchElementException ignored) {
-		}
-	
-		softAssert.assertAll();
-	}
-	
-	/**
-	 * Memastikan form checkout menampilkan pesan error jika field kosong.
-	 */
-	public void verifyInformationIsInvalid() {
-	    LogHelper.step("Klik tombol Continue (Negative Test)");
-	    utils.clickWhenReady(continueBtn);
+    /**
+     * Menekan tombol <b>Finish</b> untuk menyelesaikan proses pembelian.
+     */
+    public void finishOrder() {
+        LogHelper.step("Klik tombol Finish untuk menyelesaikan order");
+        utils.clickWhenReady(finishBtn);
+        LogHelper.detail("Checkout Sukses");
+    }
 
-	    boolean hasError = false;
+    /**
+     * Mengecek apakah pesan sukses <b>"Thank you for your order!"</b> muncul setelah menyelesaikan pesanan.
+     * 
+     * @return {@code true} jika pesan muncul, {@code false} jika tidak
+     */
+    public boolean isSuccessOrderDisplayed() {
+    	
+        return utils.isElementPresent(completeOrderSuccessMessage);
+        
+    }
 
-	    if (utils.isElementPresent(errorMessageFirstName)) {
-	        LogHelper.detail("Validasi muncul: First Name is required!");
-	        hasError = true;
-	    }
-	    if (utils.isElementPresent(errorMessageLastName)) {
-	        LogHelper.detail("Validasi muncul: Last Name is required!");
-	        hasError = true;
-	    }
-	    if (utils.isElementPresent(errorMessagePostalCode)) {
-	        LogHelper.detail("Validasi muncul: Postal Code is required!");
-	        hasError = true;
-	    }
+    /**
+     * Ekstraksi harga numerik dari label teks elemen (misalnya "$29.99").
+     * 
+     * @param element elemen WebElement yang berisi teks harga
+     * @param labelName nama label yang sedang diekstrak (untuk logging)
+     * @return nilai harga dalam format Double, atau {@code null} jika parsing gagal
+     */
+    private Double extractPriceFromLabel(WebElement element, String labelName) {
+        String rawText = CustomCommand.getTextWithJS(element);
+        if (rawText == null || rawText.isEmpty()) {
+            LogHelper.detail("Teks untuk '" + labelName + "' kosong atau null.");
+            return null;
+        }
 
-	    softAssert.assertTrue(hasError, 
-	        "Tidak ada pesan error yang muncul padahal field kosong!");
-	    softAssert.assertAll();
-	}
-
-	
-	
-	/**
-	 * Melakukan scroll agar tombol Finish terlihat dan detail Harga terlihat untuk validasi lebih lanjut.
-	 * <p>
-	 * Method ini:
-	 * <ul>
-	 * <li>Scroll ke text "Finish"</li>
-	 * </ul>
-	 */
-	public void scrollToFinishOrder() {
-		
-		// Hanya lanjut jika tidak ada error
-		LogHelper.step("Scroll ke tombol Finish");
-		utils.scrollIntoText("Finish");
-		LogHelper.detail("Menamppilkan Tombol Finish & Informasi Harga");
-	}
-	
-	/**
-	 * Mengambil nilai SubTotal (Item Total) dari halaman summary.
-	 * 
-	 * @return Harga SubTotal sebagai Double, atau null jika gagal.
-	 */
-	public Double getSubTotal() {
-		LogHelper.step("Mengambil harga Subtotal (Item Total)");
-		return extractPriceFromLabel(subTotalLabel, "SubTotal");
-	}
-	
-
-	/**
-	 * Mengambil nilai Tax (Pajak) dari halaman summary.
-	 * 
-	 * @return Harga Tax sebagai Double, atau null jika gagal.
-	 */
-	public Double getTax() {
-		LogHelper.step("Mengambil nilai Pajak (Tax)");
-		return extractPriceFromLabel(taxLabel, "Tax");
-	}
-	
-
-	/**
-	 * Mengambil nilai Grand Total dari halaman summary.
-	 * 
-	 * @return Harga Grand Total sebagai Double, atau null jika gagal.
-	 */
-	public Double getGrandTotal() {
-		LogHelper.step("Mengambil harga Grand Total");
-		return extractPriceFromLabel(grandTotal, "Total");
-	}
-
-	
-
-	/**
-	 * Menyelesaikan proses checkout hingga order berhasil dibuat.
-	 * <p>
-	 * Method ini:
-	 * <ul>
-	 * <li>Menekan tombol "Finish"</li>
-	 * </ul>
-	 */
-	public void finishOrder() {
-		LogHelper.step("Klik tombol Finish untuk menyelesaikan order");
-		utils.clickWhenReady(finishBtn);
-		LogHelper.detail("Berhasil klik tombol Finish");
-	}
-	
-	
-	/**
-	 * Melakukan validasi akhir bahwa proses order sukses
-	 * <p>
-	 * Method ini:
-	 * <ul>
-	 * <li>Validasi bahwa teks "Thank you for your order!" muncul dan sebagai indikato sukses</li>
-	 * </ul>
-	 */
-	public void verifySuccessOrder() {
-		
-		LogHelper.step("Verifikasi pesan sukses muncul");
-		utils.verifyElementExist(completeOrderSuccessMessage);
-		LogHelper.detail("Berhasil menampilkan 'Thank you for your order!' , Order Sukses");
-	}
-
-	/**
-	 * Helper internal untuk mengekstrak nilai numerik (harga) dari elemen label
-	 * summary di halaman checkout. * @param element WebElement yang berisi teks
-	 * (e.g., "Item total: $29.99")
-	 * 
-	 * @param labelName Nama label untuk logging (e.g., "SubTotal")
-	 * @return Nilai Double dari harga, atau null jika gagal parsing/ekstraksi
-	 */
-	private Double extractPriceFromLabel(WebElement element, String labelName) {
-		// 1. Ambil teks mentah menggunakan helper JS kita
-		String rawText = CustomCommand.getTextWithJS(element);
-
-		if (rawText == null || rawText.isEmpty()) {
-			LogHelper.detail("Teks untuk '" + labelName + "' kosong atau null.");
-			softAssert.fail();
-			return null; // Mengembalikan null agar assertion bisa gagal (NullPointerException)
-		}
-
-		// 2. Logika parsing Anda yang sudah ada
-		String cleanPrice = rawText.replaceAll("[^0-9.]", "");
-
-		try {
-			// 3. Parse ke Double
-			double price = Double.parseDouble(cleanPrice);
-			LogHelper.detail("Harga yang diekstrak untuk '" + labelName + "' adalah: " + price);
-
-			return price;
-
-		} catch (NumberFormatException e) {
-			LogHelper.detail("Gagal mem-parsing harga dari teks: '" + rawText + "' untuk " + labelName);
-			softAssert.fail();
-			return null; // Mengembalikan null jika parsing gagal
-		}
-	}
-
+        String cleanPrice = rawText.replaceAll("[^0-9.]", "");
+        try {
+            double price = Double.parseDouble(cleanPrice);
+            LogHelper.detail("Harga '" + labelName + "': " + price);
+            return price;
+        } catch (NumberFormatException e) {
+            LogHelper.detail("Gagal mem-parsing harga dari teks '" + rawText + "'");
+            return null;
+        }
+    }
 }

@@ -20,6 +20,11 @@ public class CustomCommand {
 
     /** Timeout default untuk explicit wait */
     private static final int DEFAULT_TIMEOUT = 60;
+    
+    
+    private static final int RETRY_COUNT = 3; // jumlah retry jika stale
+    private static final int SLEEP_MS = 300;  // delay setelah scroll
+
 
     /**
      * Mengembalikan instance WebDriver yang aktif dengan validasi.
@@ -234,15 +239,24 @@ public class CustomCommand {
      *
      * @param element WebElement target
      */
-    public static void scrollIntoView(WebElement element) {
+    public  void scrollIntoView(WebElement element) {
         WebDriver driver = getDriverSafe();
-
-        try {
-            ((JavascriptExecutor) driver).executeScript(
-                "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
-            Thread.sleep(300);
-        } catch (Exception e) {
-            System.out.println("Failed scroll into view: " + e.getMessage());
+        int attempts = 0;
+        while (attempts < RETRY_COUNT) {
+            try {
+                ((JavascriptExecutor) driver).executeScript(
+                        "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
+                Thread.sleep(SLEEP_MS);
+                break;
+            } catch (StaleElementReferenceException e) {
+                attempts++;
+                System.out.println("Stale element, retry " + attempts);
+                // coba ambil ulang element dari DOM jika WebElement memiliki By tersimpan
+                // ini opsional, kalau kamu punya reference By
+            } catch (Exception e) {
+                System.out.println("Failed scroll into view: " + e.getMessage());
+                break;
+            }
         }
     }
 
@@ -311,7 +325,7 @@ public class CustomCommand {
      *
      * @param millis durasi tunggu dalam milidetik
      */
-    public static void sleep(long millis) {
+    public void sleep(long millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
@@ -325,10 +339,14 @@ public class CustomCommand {
      * @param stepName nama langkah yang sedang dijalankan
      * @return base64 string dari screenshot
      */
-    public static String captureScreenshotBase64(String stepName) {
+    @SuppressWarnings("deprecation")
+	public static String captureScreenshotBase64(String stepName) {
         WebDriver driver = getDriverSafe();
         if (driver == null)
             return null;
+        
+        // Debug log thread dan nama step
+        System.out.println("[DEBUG] Thread " + Thread.currentThread().getId() + " capture screenshot for step: " + stepName);
 
         try {
             return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
@@ -339,7 +357,17 @@ public class CustomCommand {
     }
     
     
-    
+    public String getTextIfPresent(WebElement element) {
+        try {
+            if (isElementPresent(element)) {
+                return getTextWithJS(element).trim();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
     
     public <T> T refreshElement(Supplier<T> elementSupplier) {
         try {
