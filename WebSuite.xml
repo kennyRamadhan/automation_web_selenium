@@ -4,14 +4,14 @@
 <suite name="DoitPay Automation Suite" parallel="classes" thread-count="5">
 <listeners>
 		<listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-		<listener class-name="com.kenny.doitpay.automation.Listeners.TestListeners"/>
+		<listener class-name="com.kenny.automation.Listeners.TestListeners"/>
 	</listeners>
 
 
  <test name="Web Test">
         <classes>
-            <class name="com.kenny.doitpay.automation.Web.LoginTest" />
-            <class name="com.kenny.doitpay.automation.Web.CheckoutTest" />
+            <class name="com.kenny.automation.Web.LoginTest" />
+            <class name="com.kenny.automation.Web.CheckoutTest" />
         </classes>
     </test>
 
