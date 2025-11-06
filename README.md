@@ -212,7 +212,7 @@
 
 ### License
 
-       			 Project ini dibuat untuk keperluan proses rekrutmen DOITPAY untuk posisi QA Engneer
+       			 Project ini dibuat untuk keperluan Portofolio Sebagai QA Engineer
 ---
 				
 				
