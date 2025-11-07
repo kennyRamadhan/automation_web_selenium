@@ -62,7 +62,7 @@ public class ConfigLoader {
 	// kali
 	static {
 		try {
-			FileInputStream fis = new FileInputStream("src/main/java/com/kenny/automation/Helper/config.properties");
+			FileInputStream fis = new FileInputStream("src/main/java/com/kenny/automation/Resources/config.properties");
 			props.load(fis);
 			fis.close();
 			System.out.println("Config loaded successfully.");
