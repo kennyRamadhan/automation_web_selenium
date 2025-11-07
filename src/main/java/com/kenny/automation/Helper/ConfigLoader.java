@@ -61,15 +61,21 @@ public class ConfigLoader {
 	// Static block untuk memuat file config.properties saat class dipanggil pertama
 	// kali
 	static {
-		try {
-			FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
-			props.load(fis);
-			fis.close();
-			System.out.println("Config loaded successfully.");
-		} catch (IOException e) {
-			System.err.println("Could not load config.properties. Using defaults where possible.");
-		}
+	    try {
+	        // Load dari classpath — ini akan jalan di local, Jenkins, maupun saat dikemas sebagai jar
+	        try (var input = ConfigLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
+	            if (input != null) {
+	                props.load(input);
+	                System.out.println(" Config loaded successfully from classpath.");
+	            } else {
+	                System.err.println("config.properties not found in classpath!");
+	            }
+	        }
+	    } catch (IOException e) {
+	        System.err.println(" Could not load config.properties: " + e.getMessage());
+	    }
 	}
+
 
 	/**
 	 * Mengambil value dari key yang ada di config.properties.
