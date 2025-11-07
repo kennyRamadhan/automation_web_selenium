@@ -1,6 +1,5 @@
 package com.kenny.automation.Helper;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.Properties;
@@ -103,20 +102,23 @@ public class ConfigLoader {
 	
 	
 	public static String getActiveEnvironmentUrl() {
-	    // Ambil environment dari System Property (dikirim Jenkins)
-	    String env = System.getProperty("ENVIRONMENT", "STAGING").toUpperCase();
+	    String env = System.getProperty("ENVIRONMENT");
+	    if (env == null || env.isEmpty()) env = System.getenv("ENVIRONMENT");
+	    if (env == null || env.isEmpty()) env = "STAGING";
 
-	    // Ambil URL dari config.properties
-	    String url = props.getProperty(env);
+	    env = env.toUpperCase();
+
+	    String url = get(env);
 
 	    if (url == null || url.isEmpty()) {
-	        System.err.println(" Environment " + env + " tidak ditemukan di config.properties. Default ke STAGING.");
-	        url = props.getProperty("STAGING");
+	        System.err.println(" Environment " + env + " tidak ditemukan di config.properties maupun ENV. Default ke saucedemo.com.");
+	        url = "https://www.saucedemo.com";
 	    }
 
-	    System.out.println(" Running tests on environment: " + env + " → " + url);
+	    System.out.println("Running tests on environment: " + env + " → " + url);
 	    return url;
 	}
+
 
 	
 
