@@ -5,6 +5,7 @@ import org.testng.annotations.BeforeMethod;
 
 import com.kenny.automation.Config.ChromeDriverFactory;
 import com.kenny.automation.Config.WebDriverManager;
+import com.kenny.automation.Helper.ConfigLoader;
 
 import org.openqa.selenium.WebDriver;
 
@@ -42,7 +43,7 @@ public class BaseTest {
         WebDriverManager.initDriver(new ChromeDriverFactory());
         driver = WebDriverManager.getDriver();
         driver.manage().window().maximize();
-        driver.get("https://www.saucedemo.com");
+        driver.get(ConfigLoader.getActiveEnvironmentUrl());
     }
 
     /**

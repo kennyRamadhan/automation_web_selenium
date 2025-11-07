@@ -2,6 +2,12 @@ pipeline {
     agent any
 
     parameters {
+		
+		    choice(
+        name: 'ENVIRONMENT',
+        choices: ['STAGING', 'DEV', 'PRODUCTION'],
+        description: 'Pilih environment untuk pengujian'
+    )
         choice(
             name: 'SUITE',
             choices: ['WebSuite.xml', 'APISuite.xml'],
