@@ -63,8 +63,3 @@ out/
 .DS_Store
 Thumbs.db
 
-# ============================================
-# Local Config
-# ============================================
-config.properties
-web-driver

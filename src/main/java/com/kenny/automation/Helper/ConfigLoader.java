@@ -65,6 +65,7 @@ public class ConfigLoader {
 	        // Load dari classpath (bekerja untuk Jenkins & local)
 	        ClassLoader loader = Thread.currentThread().getContextClassLoader();
 	        if (loader.getResourceAsStream("config.properties") != null) {
+	        	System.out.println("Classpath resources: " + ConfigLoader.class.getClassLoader().getResource("config.properties"));
 	            props.load(loader.getResourceAsStream("config.properties"));
 	            System.out.println(" Config loaded successfully from classpath.");
 	        } else {
