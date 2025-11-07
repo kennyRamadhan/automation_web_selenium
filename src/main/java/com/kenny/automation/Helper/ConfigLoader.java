@@ -62,19 +62,19 @@ public class ConfigLoader {
 	// kali
 	static {
 	    try {
-	        // Load dari classpath — ini akan jalan di local, Jenkins, maupun saat dikemas sebagai jar
-	        try (var input = ConfigLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
-	            if (input != null) {
-	                props.load(input);
-	                System.out.println(" Config loaded successfully from classpath.");
-	            } else {
-	                System.err.println("config.properties not found in classpath!");
-	            }
+	        // Load dari classpath (bekerja untuk Jenkins & local)
+	        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+	        if (loader.getResourceAsStream("config.properties") != null) {
+	            props.load(loader.getResourceAsStream("config.properties"));
+	            System.out.println(" Config loaded successfully from classpath.");
+	        } else {
+	            System.err.println(" config.properties not found in classpath!");
 	        }
 	    } catch (IOException e) {
-	        System.err.println(" Could not load config.properties: " + e.getMessage());
+	        System.err.println("Failed to load config.properties: " + e.getMessage());
 	    }
 	}
+
 
 
 	/**
